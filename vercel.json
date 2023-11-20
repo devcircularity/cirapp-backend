@@ -1,0 +1,66 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "server.js",
+        "use": "@vercel/node",
+        "config": {
+          "includeFiles": [
+            "firebaseAdmin.js",
+            "./jutdo-7b90f-firebase-adminsdk-kmksq-0d97f632ad.json"
+          ]
+        }
+      }
+    ],
+    "routes": [
+      {
+        "src": "/api/users(.*)",
+        "dest": "/api/users$1",
+        "middlewares": ["authenticate"]
+      },
+      {
+        "src": "/api/tasks(.*)",
+        "dest": "/api/tasks$1",
+        "middlewares": ["authenticate"]
+      },
+      {
+        "src": "/api/jobs(.*)",
+        "dest": "/api/jobs$1",
+        "middlewares": ["authenticate"]
+      },
+      {
+        "src": "/api/reports(.*)",
+        "dest": "/api/reports$1",
+        "middlewares": ["authenticate"]
+      },
+      {
+        "src": "/api/maps/key",
+        "dest": "/api/maps/key",
+        "middlewares": ["authenticate"]
+      },
+      {
+        "src": "/api/chats(.*)",
+        "dest": "/api/chats$1",
+        "middlewares": ["authenticate"]
+      },
+      {
+        "src": "/api/messages(.*)",
+        "dest": "/api/messages$1",
+        "middlewares": ["authenticate"]
+      },
+      {
+        "src": "/uploads/(.*)",
+        "dest": "/uploads/$1"
+      }
+    ],
+    "env": {
+      "MONGODB_URI": "@mongodb_uri",
+      "CLOUDINARY_CLOUD_NAME": "@cloudinary_cloud_name",
+      "CLOUDINARY_API_KEY": "@cloudinary_api_key",
+      "CLOUDINARY_API_SECRET": "@cloudinary_api_secret",
+      "GOOGLE_MAPS_API_KEY": "@google_maps_api_key",
+      "FIREBASE_ADMIN_SDK": "@firebase_admin_sdk"
+    },
+    "regions": ["all"]
+  }
+  

@@ -59,7 +59,7 @@ io.on('connection', (socket) => {
 // Use routes for users
 app.use('/api/users', userRoutes);
 // Use routes for tasks
-app.use('/api/tasks', authenticate, taskRoutes); // This line was missing
+app.use('/api/tasks', taskRoutes); 
 
 app.use('/api/jobs', jobRoutes);
 

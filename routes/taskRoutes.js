@@ -1,16 +1,15 @@
-// server/routes/taskRoutes.js
 const express = require('express');
 const multer = require('multer');
 const stream = require('stream');
 const router = express.Router();
 const Task = require('../models/taskModel');
+const User = require('../models/userModel');
 const { cloudinary } = require('../utils/cloudinary');
-const authenticate = require('../middleware/authenticate'); // Update the path to the actual location
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.post('/', authenticate, upload.single('image'), async (req, res) => {
+router.post('/',  upload.single('image'), async (req, res) => {
   try {
     let imageUrl = '';
     if (req.file) {
@@ -36,8 +35,7 @@ router.post('/', authenticate, upload.single('image'), async (req, res) => {
       description: req.body.description,
       dueDate: new Date(req.body.dueDate),
       job: req.body.job,
-      image: imageUrl, // Using the imageUrl from Cloudinary upload
-      // Set assignedTo only if it's provided and not an empty string
+      image: imageUrl,
       ...(req.body.assignedTo && { assignedTo: req.body.assignedTo }),
     };
 
@@ -50,37 +48,24 @@ router.post('/', authenticate, upload.single('image'), async (req, res) => {
   }
 });
 
-// Middleware to check user role
-const checkUserRole = (req, res, next) => {
-  // Assuming user role is attached to req.user (adjust as needed)
-  if (!req.user) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
-  next();
-};
-
-// Route to get all tasks
-router.get('/', authenticate, checkUserRole, async (req, res) => {
+router.get('/:uid', async (req, res) => {
   try {
-    let tasks;
-    // Check if the user is a supervisor
-    if (req.user.role === 'supervisor') {
-      // Fetch all tasks for supervisors
-      tasks = await Task.find().populate('assignedTo');
-    } else {
-      // Fetch only tasks assigned to the specific user
-      tasks = await Task.find({ assignedTo: req.user._id }).populate('assignedTo');
-    }
+    const { uid } = req.params;
+    // Query tasks where 'assignedTo' matches the 'uid' string
+    const tasks = await Task.find({ assignedTo: uid }).populate('assignedTo', 'uid name'); // Adjust the populate method according to your User model
     res.json(tasks);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching tasks for user:', error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
-// Route to get a single task by ID
-router.get('/:taskId', authenticate, async (req, res) => {
+
+
+
+router.get('/:taskId', async (req, res) => {
   try {
-    const task = await Task.findById(req.params.taskId).populate('assignedTo'); // Adjust as per your model relations
+    const task = await Task.findById(req.params.taskId).populate('assignedTo');
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
