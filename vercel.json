@@ -3,7 +3,12 @@
     "builds": [
       {
         "src": "server.js",
-        "use": "@vercel/node"
+        "use": "@vercel/node",
+        "config": {
+          "includeFiles": [
+            "jutdo-7b90f-firebase-adminsdk-kmksq-0d97f632ad.json"
+          ]
+        }
       }
     ],
     "routes": [
@@ -24,8 +29,8 @@
         "dest": "/api/reports$1"
       },
       {
-        "src": "/uploads/(.*)",
-        "dest": "/uploads/$1"
+        "src": "/api/maps/key",
+        "dest": "/api/maps/key"
       },
       {
         "src": "/api/chats(.*)",
@@ -36,23 +41,19 @@
         "dest": "/api/messages$1"
       },
       {
-        "src": "/(.*)",
-        "dest": "server.js"
+        "src": "/uploads/(.*)",
+        "dest": "/uploads/$1"
       }
     ],
     "env": {
-      "MONGODB_URI": "@mongodb_uri",
-      "PORT": "@default"
-    },
-    "build": {
-      "env": {
-        "MONGODB_URI": "@mongodb_uri",
-        "PORT": "@default",
-        "GOOGLE_MAPS_API_KEY": "@google_maps_api_key",
-        "CLOUDINARY_CLOUD_NAME": "@cloudinary_cloud_name",
-        "CLOUDINARY_API_KEY": "@cloudinary_api_key",
-        "CLOUDINARY_API_SECRET": "@cloudinary_api_secret"
-      }
-    }
+        "MONGODB_URI": "@MONGODB_URI",
+        "PORT": "@PORT",
+        "GOOGLE_MAPS_API_KEY": "@GOOGLE_MAPS_API_KEY",
+        "CLOUDINARY_CLOUD_NAME": "@CLOUDINARY_CLOUD_NAME",
+        "CLOUDINARY_API_KEY": "@CLOUDINARY_API_KEY",
+        "CLOUDINARY_API_SECRET": "@CLOUDINARY_API_SECRET"
+      },
+      "regions": ["sfo"]
+    
   }
   
