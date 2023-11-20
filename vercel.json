@@ -3,50 +3,37 @@
     "builds": [
       {
         "src": "server.js",
-        "use": "@vercel/node",
-        "config": {
-          "includeFiles": [
-            "firebaseAdmin.js",
-            "./jutdo-7b90f-firebase-adminsdk-kmksq-0d97f632ad.json"
-          ]
-        }
+        "use": "@vercel/node"
       }
     ],
     "routes": [
       {
         "src": "/api/users(.*)",
-        "dest": "/api/users$1",
-        "middlewares": ["authenticate"]
+        "dest": "/api/users$1"
       },
       {
         "src": "/api/tasks(.*)",
-        "dest": "/api/tasks$1",
-        "middlewares": ["authenticate"]
+        "dest": "/api/tasks$1"
       },
       {
         "src": "/api/jobs(.*)",
-        "dest": "/api/jobs$1",
-        "middlewares": ["authenticate"]
+        "dest": "/api/jobs$1"
       },
       {
         "src": "/api/reports(.*)",
-        "dest": "/api/reports$1",
-        "middlewares": ["authenticate"]
+        "dest": "/api/reports$1"
       },
       {
         "src": "/api/maps/key",
-        "dest": "/api/maps/key",
-        "middlewares": ["authenticate"]
+        "dest": "/api/maps/key"
       },
       {
         "src": "/api/chats(.*)",
-        "dest": "/api/chats$1",
-        "middlewares": ["authenticate"]
+        "dest": "/api/chats$1"
       },
       {
         "src": "/api/messages(.*)",
-        "dest": "/api/messages$1",
-        "middlewares": ["authenticate"]
+        "dest": "/api/messages$1"
       },
       {
         "src": "/uploads/(.*)",
