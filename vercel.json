@@ -3,7 +3,12 @@
     "builds": [
       {
         "src": "server.js",
-        "use": "@vercel/node"
+        "use": "@vercel/node",
+        "config": {
+          "includeFiles": [
+            "jutdo-7b90f-firebase-adminsdk-kmksq-0d97f632ad.json"
+          ]
+        }
       }
     ],
     "routes": [
@@ -45,8 +50,7 @@
       "CLOUDINARY_CLOUD_NAME": "@cloudinary_cloud_name",
       "CLOUDINARY_API_KEY": "@cloudinary_api_key",
       "CLOUDINARY_API_SECRET": "@cloudinary_api_secret",
-      "GOOGLE_MAPS_API_KEY": "@google_maps_api_key",
-      "FIREBASE_ADMIN_SDK": "@firebase_admin_sdk"
+      "GOOGLE_MAPS_API_KEY": "@google_maps_api_key"
     },
     "regions": ["sfo"]
   }
