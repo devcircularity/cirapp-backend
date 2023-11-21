@@ -23,7 +23,7 @@ const app = express();
 const server = http.createServer(app); // Step 3: Create an HTTP server
 const io = socketio(server, {
   cors: {
-    origin: "http://localhost:3000", // Replace with your front-end URL
+    origin: "https://jutdo-7b90f.web.app/", // Replace with your front-end URL
     methods: ["GET", "POST"]
   }
 });
