@@ -53,7 +53,6 @@ router.post('/', upload.fields([
             jobName,
             notes,
             taskStatus,
-            visibility,
             clockInImage: clockInImageUrl,
             clockOutImage: clockOutImageUrl,
             taskItems: taskIds // Store the array of task IDs
