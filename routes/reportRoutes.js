@@ -12,7 +12,7 @@ router.post('/', upload.fields([
   { name: 'clockOutImage', maxCount: 1 }
 ]), async (req, res) => {
   try {
-      const { createdBy, taskName, jobName, notes, taskStatus, visibility } = req.body;
+    const { createdBy, taskName, jobName, notes, taskStatus, taskItems } = req.body;
 
 
         let clockInImageUrl = '';
@@ -45,6 +45,8 @@ router.post('/', upload.fields([
             clockOutImageUrl = await uploadImageToCloudinary(req.files.clockOutImage[0].buffer);
         }
 
+        const taskIds = Array.isArray(taskItems) ? taskItems : JSON.parse(taskItems);
+
         const newReport = new Report({
             createdBy, // Store the Firebase UID in createdBy
             taskName,
@@ -53,15 +55,17 @@ router.post('/', upload.fields([
             taskStatus,
             visibility,
             clockInImage: clockInImageUrl,
-            clockOutImage: clockOutImageUrl
-        });
+            clockOutImage: clockOutImageUrl,
+            taskItems: taskIds // Store the array of task IDs
+          });
 
-        await newReport.save();
-        res.status(201).json(newReport);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+          await newReport.save();
+          res.status(201).json(newReport);
+        } catch (error) {
+          console.error('Error while creating report:', error);
+          res.status(500).json({ message: error.message });
+        }
+      });
 
 router.get('/createdBy/:uid', async (req, res) => {
     try {

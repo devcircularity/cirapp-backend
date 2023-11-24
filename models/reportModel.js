@@ -19,13 +19,12 @@ const reportSchema = new mongoose.Schema({
     required: true,
     default: 'Pending'
   },
-  visibility: {
-    type: String,
-    required: true,
-    default: 'Private'
-  },
-  clockInImage: String, // URL of the clock-in image
-  clockOutImage: String // URL of the clock-out image
+  clockInImage: String,
+  clockOutImage: String,
+  taskItems: [{
+    type: mongoose.Schema.Types.ObjectId, // Array of task IDs
+    ref: 'Task' // Assuming 'Task' is your task model name
+  }]
 }, {
   timestamps: true
 });
@@ -33,5 +32,3 @@ const reportSchema = new mongoose.Schema({
 const Report = mongoose.model('Report', reportSchema);
 
 module.exports = Report;
-
-
