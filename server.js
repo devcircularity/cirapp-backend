@@ -16,15 +16,20 @@ const messageRoutes = require('./routes/messageRoutes');
 const clientRoutes = require('./routes/clientRoutes'); 
 const pendingTasksRoutes = require('./routes/pendingTaskRoutes'); // Update path as needed
 const corsOptions = {
-  origin: ['https://jutdo-7b90f.web.app'], // Add other domains if needed
-  credentials: true, // Allows cookies to be sent
-  optionsSuccessStatus: 200 // For legacy browsers
+  origin: 'https://jutdo-7b90f.web.app',
+  credentials: true,
+  optionsSuccessStatus: 200
 };
+
+app.use(cors(corsOptions));
+
 
 const authenticate = require('./middleware/authenticate');
 
 require('dotenv').config();
 console.log(process.env.PORT);
+
+const corsMiddleware = cors(corsOptions);
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -36,8 +41,8 @@ const io = socketio(server, {
   }
 });
 
-app.use(cors(corsOptions));
-app.use(express.json()); // For parsing application/json
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -71,7 +76,7 @@ app.use('/api/tasks', taskRoutes);
 
 app.use('/api/jobs', jobRoutes);
 
-app.use('/api/reports', reportRoutes);
+app.use('/api/reports', corsMiddleware, reportRoutes); // Apply CORS only to this route
 
 app.use('/uploads', express.static('uploads'));
 

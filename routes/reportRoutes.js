@@ -11,6 +11,8 @@ router.post('/', upload.fields([
     { name: 'clockInImage', maxCount: 1 },
     { name: 'clockOutImage', maxCount: 1 }
   ]), async (req, res) => {
+    console.log(`Received request with size: ${req.headers['content-length']}`);
+
     try {
       const { createdBy, taskName, jobName, notes, taskStatus, taskItems, supervisor, lineManager } = req.body;
   
