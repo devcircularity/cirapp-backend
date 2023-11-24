@@ -114,18 +114,30 @@ router.get('/count', async (req, res) => {
 
 
 
+// Assuming that 'job' and 'assignedTo' fields in Task model store the respective IDs.
 router.get('/:taskId', async (req, res) => {
   try {
-    const task = await Task.findById(req.params.taskId)
-      .populate('assignedTo', 'fullName') // Adjust to match the User model's field name for the full name
-      .populate('job', 'title'); // Adjust to match the Job model's field name for the job title
+    const task = await Task.findById(req.params.taskId);
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
-    res.json(task);
+
+    // Fetch additional details using the stored IDs
+    const jobDetails = task.job ? await Job.findById(task.job) : null;
+    const userDetails = task.assignedTo ? await User.findById(task.assignedTo) : null;
+
+    // Construct a result object with the populated details
+    const result = {
+      ...task.toObject(), // Convert the task document to a regular object
+      jobTitle: jobDetails ? jobDetails.title : 'N/A',
+      assignedToFullName: userDetails ? userDetails.fullName : 'N/A'
+    };
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 module.exports = router;
