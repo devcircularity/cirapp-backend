@@ -1,37 +1,85 @@
 const express = require('express');
+const multer = require('multer');
+const { cloudinary } = require('../utils/cloudinary');
 const Report = require('../models/reportModel');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 const router = express.Router();
 
-router.post('/', async (req, res) => {
-    try {
-        // Destructure the properties directly from req.body as you're no longer handling file uploads here
-        const { createdBy, taskName, jobName, notes, taskStatus, clockInImage, clockOutImage, taskItems, supervisor, lineManager } = req.body;
+router.post('/', upload.fields([
+    { name: 'clockInImage', maxCount: 1 },
+    { name: 'clockOutImage', maxCount: 1 }
+  ]), async (req, res) => {
+    console.log(`Received request with size: ${req.headers['content-length']}`);
 
-        let taskIds = [];
-        if (taskItems) {
-            // Assume taskItems is already a properly formatted array of IDs passed from the frontend
-            taskIds = taskItems;
+    try {
+      const { createdBy, taskName, jobName, notes, taskStatus, taskItems, supervisor, lineManager } = req.body;
+  
+
+        let clockInImageUrl = '';
+        let clockOutImageUrl = '';
+
+        // Function to upload image to Cloudinary
+        const uploadImageToCloudinary = async (fileBuffer) => {
+            return new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    { resource_type: 'auto' },
+                    (error, result) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(result.url);
+                        }
+                    }
+                );
+                uploadStream.end(fileBuffer);
+            });
+        };
+
+        // Handle clockInImage upload
+        if (req.files.clockInImage && req.files.clockInImage[0]) {
+            clockInImageUrl = await uploadImageToCloudinary(req.files.clockInImage[0].buffer);
         }
 
-        const newReport = new Report({
-            createdBy,
-            taskName,
-            jobName,
-            notes,
-            taskStatus,
-            clockInImage, // This is now a URL string
-            clockOutImage, // This is now a URL string
-            taskItems: taskIds,
-            supervisor,
-            lineManager
-        });
+        // Handle clockOutImage upload
+        if (req.files.clockOutImage && req.files.clockOutImage[0]) {
+            clockOutImageUrl = await uploadImageToCloudinary(req.files.clockOutImage[0].buffer);
+        }
 
-        await newReport.save();
-        res.status(201).json(newReport);
-    } catch (error) {
-        console.error('Error while creating report:', error);
-        res.status(500).json({ message: error.message });
+        let taskIds = [];
+    if (taskItems) {
+      try {
+        // Check if taskItems is a string and try to parse it
+        if (typeof taskItems === 'string') {
+          taskIds = JSON.parse(taskItems);
+        } else if (Array.isArray(taskItems)) {
+          taskIds = taskItems;
+        }
+      } catch (error) {
+        console.error('Error parsing taskItems:', error);
+      }
     }
+
+    const newReport = new Report({
+      createdBy,
+      taskName,
+      jobName,
+      notes,
+      taskStatus,
+      clockInImage: clockInImageUrl,
+      clockOutImage: clockOutImageUrl,
+      taskItems: taskIds,
+      supervisor,
+      lineManager
+    });
+
+    await newReport.save();
+    res.status(201).json(newReport);
+  } catch (error) {
+    console.error('Error while creating report:', error);
+    res.status(500).json({ message: error.message });
+  }
 });
 
 router.get('/createdBy/:uid', async (req, res) => {
