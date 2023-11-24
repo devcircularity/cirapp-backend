@@ -15,7 +15,11 @@ const chatRoutes = require('./routes/chatRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const clientRoutes = require('./routes/clientRoutes'); 
 const pendingTasksRoutes = require('./routes/pendingTaskRoutes'); // Update path as needed
-
+const corsOptions = {
+  origin: ['https://jutdo-7b90f.web.app'], // Add other domains if needed
+  credentials: true, // Allows cookies to be sent
+  optionsSuccessStatus: 200 // For legacy browsers
+};
 
 const authenticate = require('./middleware/authenticate');
 
@@ -32,7 +36,7 @@ const io = socketio(server, {
   }
 });
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json()); // For parsing application/json
 
 // Connect to MongoDB
