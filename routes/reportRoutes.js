@@ -8,12 +8,12 @@ const upload = multer({ storage: storage });
 const router = express.Router();
 
 router.post('/', upload.fields([
-  { name: 'clockInImage', maxCount: 1 },
-  { name: 'clockOutImage', maxCount: 1 }
-]), async (req, res) => {
-  try {
-    const { createdBy, taskName, jobName, notes, taskStatus, taskItems, supervisor, lineManager } = req.body;
-
+    { name: 'clockInImage', maxCount: 1 },
+    { name: 'clockOutImage', maxCount: 1 }
+  ]), async (req, res) => {
+    try {
+      const { createdBy, taskName, jobName, notes, taskStatus, taskItems, supervisor, lineManager } = req.body;
+  
 
         let clockInImageUrl = '';
         let clockOutImageUrl = '';
@@ -45,28 +45,37 @@ router.post('/', upload.fields([
             clockOutImageUrl = await uploadImageToCloudinary(req.files.clockOutImage[0].buffer);
         }
 
-        const taskIds = Array.isArray(taskItems) ? taskItems : JSON.parse(taskItems);
+        let taskIds = [];
+    if (taskItems) {
+      try {
+        // Safely parse taskItems, it can be an array or a JSON string
+        taskIds = Array.isArray(taskItems) ? taskItems : JSON.parse(taskItems);
+      } catch (error) {
+        // If parsing fails, log the error and use an empty array
+        console.error('Error parsing taskItems:', error);
+      }
+    }
 
-        const newReport = new Report({
-            createdBy,
-            taskName,
-            jobName,
-            notes,
-            taskStatus,
-            clockInImage: clockInImageUrl,
-            clockOutImage: clockOutImageUrl,
-            taskItems: taskIds,
-            supervisor, // Add supervisor to the report
-            lineManager // Add lineManager to the report
-          });
+    const newReport = new Report({
+      createdBy,
+      taskName,
+      jobName,
+      notes,
+      taskStatus,
+      clockInImage: clockInImageUrl,
+      clockOutImage: clockOutImageUrl,
+      taskItems: taskIds,
+      supervisor,
+      lineManager
+    });
 
-          await newReport.save();
-          res.status(201).json(newReport);
-        } catch (error) {
-          console.error('Error while creating report:', error);
-          res.status(500).json({ message: error.message });
-        }
-      });
+    await newReport.save();
+    res.status(201).json(newReport);
+  } catch (error) {
+    console.error('Error while creating report:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
 router.get('/createdBy/:uid', async (req, res) => {
     try {
