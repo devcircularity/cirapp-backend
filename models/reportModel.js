@@ -19,6 +19,8 @@ const reportSchema = new mongoose.Schema({
     required: true,
     default: 'Pending'
   },
+  supervisor: String, // Add supervisor field
+  lineManager: String, // Add lineManager field
   clockInImage: String,
   clockOutImage: String,
   taskItems: [{
