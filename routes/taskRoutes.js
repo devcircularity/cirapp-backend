@@ -116,7 +116,9 @@ router.get('/count', async (req, res) => {
 
 router.get('/:taskId', async (req, res) => {
   try {
-    const task = await Task.findById(req.params.taskId).populate('assignedTo');
+    const task = await Task.findById(req.params.taskId)
+      .populate('assignedTo', 'fullName') // Adjust to match the User model's field name for the full name
+      .populate('job', 'title'); // Adjust to match the Job model's field name for the job title
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
