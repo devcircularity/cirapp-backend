@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const reportSchema = new mongoose.Schema({
+  createdBy: {
+    type: String,
+    required: true
+  },
   taskName: {
     type: String,
     required: true
@@ -10,16 +14,18 @@ const reportSchema = new mongoose.Schema({
     required: true
   },
   notes: String,
-  taskStatus: { type: String, required: true, default: 'Pending' },
-
-  visibility: { type: String, required: true, default: 'Private' },
-
-  clockInImage: {
-    type: String // URL of the clock-in image
+  taskStatus: {
+    type: String,
+    required: true,
+    default: 'Pending'
   },
-  clockOutImage: {
-    type: String // URL of the clock-out image
-  }
+  visibility: {
+    type: String,
+    required: true,
+    default: 'Private'
+  },
+  clockInImage: String, // URL of the clock-in image
+  clockOutImage: String // URL of the clock-out image
 }, {
   timestamps: true
 });
@@ -27,3 +33,5 @@ const reportSchema = new mongoose.Schema({
 const Report = mongoose.model('Report', reportSchema);
 
 module.exports = Report;
+
+

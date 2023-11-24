@@ -12,13 +12,17 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'supervisor', 'admin'],
     default: 'user'
   },
-  // Add the supervisor field as a reference to another User document
   supervisor: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: function() { return this.role === 'user' && this.supervisor != null; }
+    default: null
   },
-  
+  // Add the LineManager field as a reference to another User document
+  LineManager: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
   // ... any other fields you may need
 });
 

@@ -3,19 +3,17 @@ const multer = require('multer');
 const { cloudinary } = require('../utils/cloudinary');
 const Report = require('../models/reportModel');
 
-// Configure multer for file uploads
 const storage = multer.memoryStorage();
-const upload = multer({ storage: multer.memoryStorage() });
-
+const upload = multer({ storage: storage });
 const router = express.Router();
 
 router.post('/', upload.fields([
   { name: 'clockInImage', maxCount: 1 },
   { name: 'clockOutImage', maxCount: 1 }
 ]), async (req, res) => {
-    try {
-        // Extracting text fields from the request
-        const { taskName, jobName, notes, taskStatus, visibility } = req.body;
+  try {
+      const { createdBy, taskName, jobName, notes, taskStatus, visibility } = req.body;
+
 
         let clockInImageUrl = '';
         let clockOutImageUrl = '';
@@ -47,8 +45,8 @@ router.post('/', upload.fields([
             clockOutImageUrl = await uploadImageToCloudinary(req.files.clockOutImage[0].buffer);
         }
 
-        // Create a new report with the data and image URLs
         const newReport = new Report({
+            createdBy, // Store the Firebase UID in createdBy
             taskName,
             jobName,
             notes,
@@ -61,17 +59,20 @@ router.post('/', upload.fields([
         await newReport.save();
         res.status(201).json(newReport);
     } catch (error) {
-        console.error('Error while creating report:', error);
         res.status(500).json({ message: error.message });
     }
 });
 
-// Route to get all reports
-router.get('/', async (req, res) => {
+router.get('/createdBy/:uid', async (req, res) => {
     try {
-        const reports = await Report.find();
+        const { uid } = req.params;
+        console.log("Fetching reports for UID:", uid); // Log the UID being queried
+
+        // Fetch reports based on the UID
+        const reports = await Report.find({ createdBy: uid }); // Assuming 'createdBy' is the correct field in your Report model
         res.json(reports);
     } catch (error) {
+        console.error('Error fetching reports:', error);
         res.status(500).json({ message: error.message });
     }
 });

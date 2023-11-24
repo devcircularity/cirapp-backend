@@ -31,7 +31,9 @@ router.post('/', upload.single('image'), async (req, res) => {
       image: imageUrl, // Set the image URL
       description: req.body.description,
       duration: req.body.duration,
-      numberOfTasks: req.body.numberOfTasks
+      numberOfTasks: req.body.numberOfTasks,
+      startDate: req.body.startDate,
+  endDate: req.body.endDate,
     });
 
     const newJob = await job.save();
@@ -39,6 +41,16 @@ router.post('/', upload.single('image'), async (req, res) => {
   } catch (err) {
     console.error("Error while creating job:", err);
     res.status(400).json({ message: err.message });
+  }
+});
+
+// routes/jobRoutes.js
+router.get('/count', async (req, res) => {
+  try {
+    const count = await Job.countDocuments();
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

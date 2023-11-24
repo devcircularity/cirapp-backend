@@ -27,11 +27,20 @@ const taskSchema = new mongoose.Schema({
     required: false, 
     default: null, 
   },
+  assignedBy: {
+    type: String, // Reference to User model
+    ref: 'User', // Assuming your User model is named 'User'
+    required: false,
+  },
   image: {
     type: String,
     trim: true,
     // You can set default to a placeholder image if you want
     default: '',
+  },
+  status: {
+    type: String,
+    default: 'pending', // Default status
   },
   completed: {
     type: Boolean,

@@ -38,4 +38,35 @@ router.get('/:uid', async (req, res) => {
   }
 });
 
+
+router.put('/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const updateData = req.body;
+
+    // Update user by userId
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// server/routes/userRoutes.js
+// server/routes/userRoutes.js
+router.get('/count', async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+
 module.exports = router;

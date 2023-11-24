@@ -13,6 +13,10 @@ const reportRoutes = require('./routes/reportRoutes');
 const mapRoutes = require('./routes/mapRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const clientRoutes = require('./routes/clientRoutes'); 
+const pendingTasksRoutes = require('./routes/pendingTaskRoutes'); // Update path as needed
+
+
 const authenticate = require('./middleware/authenticate');
 
 require('dotenv').config();
@@ -70,6 +74,10 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/chats', chatRoutes);
 
 app.use('/api/messages', messageRoutes);
+
+app.use('/api/clients', clientRoutes);
+
+app.use('/api', pendingTasksRoutes);
 
 app.use(mapRoutes);
 
