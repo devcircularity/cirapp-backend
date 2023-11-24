@@ -48,10 +48,13 @@ router.post('/', upload.fields([
         let taskIds = [];
     if (taskItems) {
       try {
-        // Safely parse taskItems, it can be an array or a JSON string
-        taskIds = Array.isArray(taskItems) ? taskItems : JSON.parse(taskItems);
+        // Check if taskItems is a string and try to parse it
+        if (typeof taskItems === 'string') {
+          taskIds = JSON.parse(taskItems);
+        } else if (Array.isArray(taskItems)) {
+          taskIds = taskItems;
+        }
       } catch (error) {
-        // If parsing fails, log the error and use an empty array
         console.error('Error parsing taskItems:', error);
       }
     }
