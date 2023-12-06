@@ -12,11 +12,11 @@ module.exports = function(io) {
     });
 
     socket.on('sendMessage', async ({ chatId, senderId, text }) => {
-      console.log('Received message data:', { chatId, senderId, text }); // Log for debugging    
+      console.log('Received message data:', { chatId, senderId, text });
       try {
         const newMessage = await Message.create({ chat: chatId, sender: senderId, text });
-        // Emit the message to everyone in the room except the sender
-        socket.to(chatId).emit('message', newMessage);
+        // Use `io.to(chatId).emit` instead of `socket.to(chatId).emit` to include the sender.
+        io.to(chatId).emit('message', newMessage);
       } catch (error) {
         console.error('Error saving message:', error);
       }
