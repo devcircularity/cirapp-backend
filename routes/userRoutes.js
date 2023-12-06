@@ -23,6 +23,19 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/search', async (req, res) => {
+  try {
+    const searchQuery = req.query.q;
+    const users = await User.find({
+          // Assuming 'username' or 'fullName' field exists. Adjust as per your schema.
+          // Use a regex for partial matching and case-insensitive search
+          fullName: { $regex: searchQuery, $options: "i" }
+        });
+        res.json(users);
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+    });
 
 // New route to get a specific user by UID
 router.get('/:uid', async (req, res) => {
@@ -66,6 +79,7 @@ router.get('/count', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 
 

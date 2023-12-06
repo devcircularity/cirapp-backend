@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const http = require('http');
+const socketio = require('socket.io');
+
 
 // Import routes
 const taskRoutes = require('./routes/taskRoutes');
@@ -10,7 +12,6 @@ const jobRoutes = require('./routes/jobRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const mapRoutes = require('./routes/mapRoutes');
 const chatRoutes = require('./routes/chatRoutes');
-const messageRoutes = require('./routes/messageRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const pendingTasksRoutes = require('./routes/pendingTaskRoutes');
 
@@ -21,6 +22,16 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
+
+const io = socketio(server, {
+  cors: {
+    origin: ["http://localhost:3000", "https://jutdo-7b90f.web.app"], // Allow multiple frontend origins
+    methods: ["GET", "POST"] // Allow only these methods for socket.io
+  }
+});
+require('./configurations/socket')(io);
+
+
 
 // CORS configuration
 const whitelist = ['http://localhost:3000', 'https://jutdo-7b90f.web.app'];
@@ -55,7 +66,6 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/chats', chatRoutes);
-app.use('/api/messages', messageRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/pendingtasks', pendingTasksRoutes);
 app.use(mapRoutes);

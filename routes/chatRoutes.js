@@ -1,58 +1,77 @@
 const express = require('express');
-const Chat = require('../models/chatModel'); // Your Chat model
-const Message = require('../models/messageModel'); // Your Message model
+const Chat = require('../models/Chat');
+const Message = require('../models/Message');
 const router = express.Router();
 
-// Route to start a new chat or return an existing chat
-router.post('/start', async (req, res) => {
+// Start a new chat
+router.post('/', async (req, res) => {
   try {
-    const { userIds } = req.body; // Array of user IDs participating in the chat
-    // Check if a chat with these users already exists
-    let chat = await Chat.findOne({ participants: { $all: userIds } });
-    if (!chat) {
-      // If not, create a new chat
-      chat = new Chat({ participants: userIds });
-      await chat.save();
-    }
-    res.status(201).json({ chatId: chat._id });
+    console.log(req.body); // Log the request body to debug
+    const { members } = req.body;
+    const newChat = new Chat({ members });
+    await newChat.save();
+    res.status(201).json(newChat);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+
+
+
+// Send a message
+router.post('/:chatId/messages', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { sender, text } = req.body;
+    const newMessage = new Message({ chat: chatId, sender, text });
+await newMessage.save();
+
+    res.status(201).json(newMessage);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Get all chats for a user
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const chats = await Chat.find({ members: userId }).populate('members', 'fullName avatar');
+    
+    console.log('Fetched chats:', chats); // Log the fetched chats
+
+    res.json(chats);
+  } catch (error) {
+    console.error('Error fetching chats:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+// Get all messages within a chat
+router.get('/:chatId/messages', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const messages = await Message.find({ chat: chatId })
+                                  .populate('sender', '_id fullName avatar'); // Make sure to populate the sender
+    res.json(messages);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Route to get all chats
-router.get('/', async (req, res) => {
-    try {
-      // Fetch all chats, possibly with some pagination logic
-      const chats = await Chat.find().populate('participants lastMessage');
-      res.json(chats);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  });
 
-
-// Assuming your Chat model has a 'lastMessage' field that stores the ID of the last message
-
-// Route to get all chats for a specific user, including the last message content
+// Get all chats for a user
 router.get('/user/:userId', async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const chats = await Chat.find({ participants: userId })
-        .populate('lastMessage') // Populating the last message content based on the ID
-        .exec();
-  
-      // Optionally, if your messages reference other collections (e.g., sender), you can further populate those as well
-      const chatsWithLastMessageDetails = await Message.populate(chats, { path: 'lastMessage.sender' });
-  
-      res.json(chatsWithLastMessageDetails);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-  
-  
-  
+  try {
+    const { userId } = req.params;
+    const chats = await Chat.find({ members: userId }).populate('members', 'fullName avatar'); // Include the full name and avatar
+    res.json(chats);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 
 module.exports = router;
