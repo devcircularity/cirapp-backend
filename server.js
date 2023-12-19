@@ -25,7 +25,7 @@ const server = http.createServer(app);
 
 const io = socketio(server, {
   cors: {
-    origin: ["https://jutdo-7b90f.web.app"], // Allow multiple frontend origins
+    origin: ["http://localhost:3000"], // Allow multiple frontend origins
     methods: ["GET", "POST"] // Allow only these methods for socket.io
   }
 });

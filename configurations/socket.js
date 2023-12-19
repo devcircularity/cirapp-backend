@@ -11,16 +11,16 @@ module.exports = function(io) {
       socket.join(chatId); // Join the chat room
     });
 
-    socket.on('sendMessage', async ({ chatId, senderId, text }) => {
-      console.log('Received message data:', { chatId, senderId, text });
-      try {
-        const newMessage = await Message.create({ chat: chatId, sender: senderId, text });
-        // Use `io.to(chatId).emit` instead of `socket.to(chatId).emit` to include the sender.
-        io.to(chatId).emit('message', newMessage);
-      } catch (error) {
-        console.error('Error saving message:', error);
-      }
-    });
+socket.on('sendMessage', async ({ chatId, senderId, text }) => {
+  console.log('Received message data:', { chatId, senderId, text });
+  try {
+    const newMessage = await Message.create({ chat: chatId, sender: senderId, text });
+io.to(chatId).emit('message', newMessage); // Make sure this is emitting to the room
+
+  } catch (error) {
+    console.error('Error saving message:', error);
+  }
+});
 
     socket.on('disconnect', () => {
       console.log('user disconnected');
