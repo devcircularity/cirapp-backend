@@ -10,8 +10,9 @@ const reportSchema = new mongoose.Schema({
     required: true
   },
   jobName: {
-    type: String,
-    required: true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job',
+    required: true,
   },
   notes: String,
   taskStatus: {
@@ -19,13 +20,18 @@ const reportSchema = new mongoose.Schema({
     required: true,
     default: 'Pending'
   },
-  supervisor: String, // Add supervisor field
-  lineManager: String, // Add lineManager field
+  supervisor: {
+    type: mongoose.Schema.Types.ObjectId, // Change the type to ObjectId
+    ref: 'User', // Reference the 'User' model
+    required: true,
+    default: null
+  },
+  lineManager: String,
   clockInImage: String,
   clockOutImage: String,
   taskItems: [{
-    type: mongoose.Schema.Types.ObjectId, // Array of task IDs
-    ref: 'Task' // Assuming 'Task' is your task model name
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Task'
   }]
 }, {
   timestamps: true

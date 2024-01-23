@@ -76,22 +76,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST a new job
-router.post('/', async (req, res) => {
-  const job = new Job({
-    title: req.body.title,
-    image: req.body.image,
-    description: req.body.description,
-    // Add more fields as needed
-  });
-
-  try {
-    const newJob = await job.save();
-    res.status(201).json(newJob);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
 
 // Add other CRUD operations as needed
 

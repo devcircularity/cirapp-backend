@@ -3,14 +3,26 @@ const express = require('express');
 const User = require('../models/userModel'); // Adjust with your user model
 const router = express.Router();
 
+// server/routes/userRoutes.js
 router.get('/', async (req, res) => {
   try {
-    const users = await User.find({}); // Fetch all users
+    const supervisorId = req.query.supervisorId; // Extract supervisorId from query parameters
+    let users;
+
+    if (supervisorId) {
+      // If supervisorId is provided, fetch only users assigned to that supervisor
+      users = await User.find({ supervisor: supervisorId });
+    } else {
+      // If supervisorId is not provided, fetch all users
+      users = await User.find({});
+    }
+
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 router.post('/', async (req, res) => {
   try {

@@ -21,16 +21,22 @@ const taskSchema = new mongoose.Schema({
     // If this is supposed to be a reference to another model, you might want to use a ref like below
     // ref: 'Job'
   },
-  // Update assignedTo to be a String type
   assignedTo: {
-    type: String, // Changed from ObjectId to String
-    required: false, 
-    default: null, 
+    type: mongoose.Schema.Types.ObjectId,  // Updated type to ObjectId
+    ref: 'User',
+    required: false,
+    default: null,
   },
   assignedBy: {
-    type: String, // Reference to User model
-    ref: 'User', // Assuming your User model is named 'User'
+    type: String,
+    ref: 'User', // Reference to the User model
     required: false,
+  },
+  supervisor: {
+    type: mongoose.Schema.Types.ObjectId,  // Updated type to ObjectId
+    ref: 'User',
+    required: false,
+    default: null,
   },
   image: {
     type: String,

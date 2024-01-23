@@ -12,18 +12,22 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'supervisor', 'admin'],
     default: 'user'
   },
-  supervisor: {
+  assignedBy: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     default: null
   },
-  // Add the LineManager field as a reference to another User document
   LineManager: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     default: null
   },
-  // ... any other fields you may need
+  supervisor: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+
 });
 
 const User = mongoose.model('User', userSchema);
