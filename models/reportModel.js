@@ -23,7 +23,7 @@ const reportSchema = new mongoose.Schema({
   supervisor: {
     type: mongoose.Schema.Types.ObjectId, // Change the type to ObjectId
     ref: 'User', // Reference the 'User' model
-    required: true,
+    required: false,
     default: null
   },
   lineManager: String,

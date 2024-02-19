@@ -80,18 +80,20 @@ router.post('/', upload.fields([
       // Include other job details as needed
     };
 
-    const newReport = new Report({
-      createdBy,
-      taskName,
-      jobName: jobDetailsData, // Store the job details
-      notes,
-      taskStatus,
-      clockInImage: clockInImageUrl,
-      clockOutImage: clockOutImageUrl,
-      taskItems: taskObjectIds,
-      supervisor: supervisorDetails, // Store the supervisor details
-      lineManager
-    });
+
+const newReport = new Report({
+  createdBy,
+  taskName,
+  jobName: jobDetails ? jobDetails._id : null, // Pass only the ObjectId
+  notes,
+  taskStatus,
+  clockInImage: clockInImageUrl,
+  clockOutImage: clockOutImageUrl,
+  taskItems: taskObjectIds,
+  supervisor: supervisorUser ? supervisorUser._id : null, // Pass only the ObjectId
+  lineManager
+});
+
 
     await newReport.save();
     res.status(201).json(newReport);
