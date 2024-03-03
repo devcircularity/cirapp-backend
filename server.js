@@ -25,7 +25,7 @@ const server = http.createServer(app);
 
 const io = socketio(server, {
   cors: {
-    origin: ["http://localhost:3000"], // Allow multiple frontend origins
+    origin: ["http://localhost:3000", "https://vulgo-6d8e3.web.app"], // Allow multiple frontend origins
     methods: ["GET", "POST"] // Allow only these methods for socket.io
   }
 });
@@ -34,7 +34,7 @@ require('./configurations/socket')(io);
 
 
 // CORS configuration
-const whitelist = ['http://localhost:3000', 'https://jutdo-7b90f.web.app'];
+const whitelist = ['http://localhost:3000', 'https://vulgo-6d8e3.web.app'];
 const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1 || !origin) {
