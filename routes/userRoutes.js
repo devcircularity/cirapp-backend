@@ -3,25 +3,54 @@ const express = require('express');
 const User = require('../models/userModel'); // Adjust with your user model
 const router = express.Router();
 
-// server/routes/userRoutes.js
+// Fetch all users based on the user's role
 router.get('/', async (req, res) => {
   try {
-    const supervisorId = req.query.supervisorId; // Extract supervisorId from query parameters
-    let users;
-
-    if (supervisorId) {
-      // If supervisorId is provided, fetch only users assigned to that supervisor
-      users = await User.find({ supervisor: supervisorId });
+    const { userId, role } = req.query;
+    
+    if (role === 'LineManager') {
+      // If the user is a Line Manager, fetch all users
+      const users = await User.find({});
+      res.json(users);
     } else {
-      // If supervisorId is not provided, fetch all users
-      users = await User.find({});
+      // If the user is a Supervisor, fetch users assigned to the supervisor
+      const supervisor = await User.findById(userId).populate('supervisor');
+      if (!supervisor) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      const users = await User.find({ supervisor: supervisor._id });
+      res.json(users);
     }
-
-    res.json(users);
   } catch (error) {
+    console.error("Error fetching users:", error);
     res.status(500).json({ message: error.message });
   }
 });
+
+// Fetch all supervisors
+router.get('/supervisors', async (req, res) => {
+  try {
+    const supervisors = await User.find({ role: 'supervisor' });
+    res.json(supervisors);
+  } catch (error) {
+    console.error("Error fetching supervisors:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Fetch all line managers
+router.get('/lineManagers', async (req, res) => {
+  try {
+    const lineManagers = await User.find({ role: 'lineManager' });
+    res.json(lineManagers);
+  } catch (error) {
+    console.error("Error fetching line managers:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+
 
 
 router.post('/', async (req, res) => {

@@ -3,6 +3,7 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const Job = require('../models/Job');
+const User = require('../models/userModel');
 const { cloudinary } = require('../utils/cloudinary');
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -55,15 +56,30 @@ router.get('/count', async (req, res) => {
 });
 
 
-// GET all jobs
+// GET jobs filtered by user
 router.get('/', async (req, res) => {
   try {
-    const jobs = await Job.find();
+    const { userId } = req.query; // Assuming you pass the user ID as a query parameter
+    const user = await User.findById(userId);
+
+    let jobs;
+    if (user.role === 'LineManager') {
+      jobs = await Job.find({}); // If the user is a LineManager, fetch all jobs
+    } else {
+      jobs = await Job.find({
+        $or: [
+          { supervisor: userId },
+          { users: userId }
+        ]
+      });
+    }
+
     res.json(jobs);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 // GET a single job by ID
 router.get('/:id', async (req, res) => {

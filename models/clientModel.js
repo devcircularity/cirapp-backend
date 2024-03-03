@@ -22,12 +22,17 @@ const clientSchema = new mongoose.Schema({
     required: true,
   },
   createdBy: {
-    type: String, // Assuming UID is an ObjectId; change as per your UID structure
+    type: mongoose.Schema.Types.ObjectId, // Specify that this is an ObjectId
     required: true,
-    ref: 'User' // Referencing User model; change this if your user model has a different name
+    ref: 'User' // This assumes your User model is named 'User'
   },
   image: {
     type: String, // URL of the image
+  },
+  job: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job', // References a Job document
+    required: true
   },
 }, {
   timestamps: true,
