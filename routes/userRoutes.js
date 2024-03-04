@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
       // If the user is a Line Manager, fetch all users
       const users = await User.find({});
       res.json(users);
-    } else {
+    } else if (role === 'Supervisor' && userId) {
       // If the user is a Supervisor, fetch users assigned to the supervisor
       const supervisor = await User.findById(userId).populate('supervisor');
       if (!supervisor) {
@@ -20,12 +20,17 @@ router.get('/', async (req, res) => {
       }
       const users = await User.find({ supervisor: supervisor._id });
       res.json(users);
+    } else {
+      // Fetch all users if no role or userId is specified
+      const users = await User.find({});
+      res.json(users);
     }
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: error.message });
   }
 });
+
 
 // Fetch all supervisors
 router.get('/supervisors', async (req, res) => {

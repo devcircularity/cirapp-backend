@@ -10,6 +10,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/', upload.single('image'), async (req, res) => {
   try {
+    console.log("POST /api/jobs request received");
+    
     let imageUrl = '';
     if (req.file) {
       const uploadResponse = await new Promise((resolve, reject) => {
@@ -34,7 +36,7 @@ router.post('/', upload.single('image'), async (req, res) => {
       duration: req.body.duration,
       numberOfTasks: req.body.numberOfTasks,
       startDate: req.body.startDate,
-  endDate: req.body.endDate,
+      endDate: req.body.endDate,
     });
 
     const newJob = await job.save();
@@ -45,9 +47,10 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
-// routes/jobRoutes.js
 router.get('/count', async (req, res) => {
   try {
+    console.log("GET /api/jobs/count request received");
+    
     const count = await Job.countDocuments();
     res.json({ count });
   } catch (err) {
@@ -55,10 +58,10 @@ router.get('/count', async (req, res) => {
   }
 });
 
-
-// GET jobs filtered by user
 router.get('/', async (req, res) => {
   try {
+    console.log("GET /api/jobs request received");
+    
     const { userId } = req.query; // Assuming you pass the user ID as a query parameter
     const user = await User.findById(userId);
 
@@ -80,10 +83,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-
-// GET a single job by ID
 router.get('/:id', async (req, res) => {
   try {
+    console.log("GET /api/jobs/:id request received");
+    
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: 'Job not found' });
     res.json(job);
@@ -91,8 +94,5 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-
-// Add other CRUD operations as needed
 
 module.exports = router;
