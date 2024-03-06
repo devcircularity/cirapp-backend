@@ -44,7 +44,7 @@ router.get('/supervisors', async (req, res) => {
 // Fetch all line managers
 router.get('/lineManagers', async (req, res) => {
   try {
-    const lineManagers = await User.find({ role: 'lineManager' });
+    const lineManagers = await User.find({ role: 'LineManager' });
     res.json(lineManagers);
   } catch (error) {
     console.error("Error fetching line managers:", error);
