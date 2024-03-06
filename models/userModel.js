@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
     ref: 'User',
     default: null
   },
-  lineManager: {
+  LineManager: { // Change field name to 'LineManager'
     type: Schema.Types.ObjectId,
     ref: 'User', // Assuming 'User' is the name of the model you want to reference
     default: null
