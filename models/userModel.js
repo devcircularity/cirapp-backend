@@ -17,14 +17,14 @@ const userSchema = new mongoose.Schema({
     ref: 'User',
     default: null
   },
-  LineManager: {
+  lineManager: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'User', // Assuming 'User' is the name of the model you want to reference
     default: null
   },
   supervisor: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Assuming 'User' is the model name
     default: null
   },
 

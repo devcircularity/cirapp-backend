@@ -29,14 +29,25 @@ router.post('/', upload.single('image'), async (req, res) => {
       imageUrl = uploadResponse.url;
     }
 
+    // Ensure the supervisor ID is received from the request
+    const { title, description, duration, numberOfTasks, startDate, endDate, supervisor, users } = req.body;
+
+    // Parse the users array if it's a string of JSON
+    let parsedUsers = users;
+    if (typeof users === 'string') {
+      parsedUsers = JSON.parse(users);
+    }
+
     const job = new Job({
-      title: req.body.title,
-      image: imageUrl, // Set the image URL
-      description: req.body.description,
-      duration: req.body.duration,
-      numberOfTasks: req.body.numberOfTasks,
-      startDate: req.body.startDate,
-      endDate: req.body.endDate,
+      title,
+      image: imageUrl,
+      description,
+      duration,
+      numberOfTasks,
+      startDate,
+      endDate,
+      supervisor, // Now assigning the supervisor ID received from the request
+      users: parsedUsers,
     });
 
     const newJob = await job.save();
@@ -46,6 +57,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
+
 
 router.get('/count', async (req, res) => {
   try {

@@ -4,32 +4,30 @@ const User = require('../models/userModel'); // Adjust with your user model
 const router = express.Router();
 
 // Fetch all users based on the user's role
+// server/routes/userRoutes.js
 router.get('/', async (req, res) => {
   try {
-    const { userId, role } = req.query;
-    
-    if (role === 'LineManager') {
-      // If the user is a Line Manager, fetch all users
-      const users = await User.find({});
-      res.json(users);
-    } else if (role === 'Supervisor' && userId) {
-      // If the user is a Supervisor, fetch users assigned to the supervisor
-      const supervisor = await User.findById(userId).populate('supervisor');
-      if (!supervisor) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-      const users = await User.find({ supervisor: supervisor._id });
-      res.json(users);
-    } else {
-      // Fetch all users if no role or userId is specified
-      const users = await User.find({});
-      res.json(users);
+    const { supervisorId } = req.query;
+
+    let query = {};
+
+    if (supervisorId) {
+      // Find users where the 'supervisor' field matches the supervisorId
+      query.supervisor = supervisorId;
     }
+
+    // Populate 'supervisor' and 'lineManager' fields with their 'fullName' from the User collection
+    const users = await User.find(query)
+      .populate('supervisor', 'fullName')
+      .populate('lineManager', 'fullName');
+
+    res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: error.message });
   }
 });
+
 
 
 // Fetch all supervisors
