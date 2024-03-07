@@ -78,7 +78,7 @@ router.get('/', async (req, res) => {
     const user = await User.findById(userId);
 
     let jobs;
-    if (user.role === 'LineManager') {
+    if (user.role === 'lineManager') {
       jobs = await Job.find({}); // If the user is a LineManager, fetch all jobs
     } else {
       jobs = await Job.find({
