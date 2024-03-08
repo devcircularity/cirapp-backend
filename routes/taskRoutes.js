@@ -31,22 +31,13 @@ router.post('/', upload.single('image'), async (req, res) => {
     }
 
     // Handle 'assignedTo' as an array of IDs
-    let assignedTo = req.body.assignedTo;
-    if (typeof assignedTo === 'string') {
-      try {
-        assignedTo = JSON.parse(assignedTo);
-      } catch (error) {
-        return res.status(400).json({ message: 'Invalid format for assignedTo' });
-      }
+    let assignedToArray = [];
+    try {
+      assignedToArray = JSON.parse(req.body.assignedTo);
+    } catch (error) {
+      return res.status(400).json({ message: "Invalid format for assignedTo field" });
     }
 
-    // Validate 'assignedTo' as an array of valid MongoDB IDs
-    if (!Array.isArray(assignedTo) || !assignedTo.every(id => mongoose.Types.ObjectId.isValid(id))) {
-      return res.status(400).json({ message: 'assignedTo must be an array of valid user IDs' });
-    }
-
-    const supervisorId = req.body.supervisor;
-    // Optional: Validate the supervisor ID
 
     const taskData = {
       name: req.body.name,
