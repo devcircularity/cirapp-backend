@@ -1,11 +1,10 @@
 const express = require('express');
 const multer = require('multer');
 const stream = require('stream');
+const Task = require('../models/taskModel'); // Your Task model
+const User = require('../models/userModel'); // Your User model
 const router = express.Router();
-const Task = require('../models/taskModel');
-const User = require('../models/userModel');
-const mongoose = require('mongoose');
-const { cloudinary } = require('../utils/cloudinary');
+const { cloudinary } = require('../utils/cloudinary'); // Your Cloudinary configuration
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -16,7 +15,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     if (req.file) {
       // Upload image to Cloudinary
       const uploadResponse = await new Promise((resolve, reject) => {
-        const cloudinaryStream = cloudinary.uploader.upload_stream(
+        const uploader = cloudinary.uploader.upload_stream(
           { resource_type: 'auto' },
           (error, result) => {
             if (error) reject(error);
@@ -25,34 +24,52 @@ router.post('/', upload.single('image'), async (req, res) => {
         );
         const bufferStream = new stream.PassThrough();
         bufferStream.end(req.file.buffer);
-        bufferStream.pipe(cloudinaryStream);
+        bufferStream.pipe(uploader);
       });
 
       imageUrl = uploadResponse.url;
     }
 
-    // Fetch supervisor details
-    const supervisor = await User.findById(req.body.supervisor).select('fullName');
-    
+    // Handle 'assignedTo' as an array of IDs
+    let assignedTo = req.body.assignedTo;
+    if (typeof assignedTo === 'string') {
+      try {
+        assignedTo = JSON.parse(assignedTo);
+      } catch (error) {
+        return res.status(400).json({ message: 'Invalid format for assignedTo' });
+      }
+    }
+
+    // Validate 'assignedTo' as an array of valid MongoDB IDs
+    if (!Array.isArray(assignedTo) || !assignedTo.every(id => mongoose.Types.ObjectId.isValid(id))) {
+      return res.status(400).json({ message: 'assignedTo must be an array of valid user IDs' });
+    }
+
+    const supervisorId = req.body.supervisor;
+    // Optional: Validate the supervisor ID
+
     const taskData = {
       name: req.body.name,
       description: req.body.description,
       dueDate: new Date(req.body.dueDate),
       job: req.body.job,
       image: imageUrl,
-      assignedTo: req.body.assignedTo,
-      assignedBy: req.body.assignedBy,
-      supervisor: supervisor, // Use the fetched supervisor details
+      assignedTo: assignedTo,
+      assignedBy: req.body.assignedBy, // Assuming this is provided and valid
+      supervisor: supervisorId,
     };
 
     const newTask = new Task(taskData);
-    const task = await newTask.save();
-    res.status(201).json(task);
+    await newTask.save();
+
+    res.status(201).json(newTask);
   } catch (error) {
     console.error('Error while creating task:', error);
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to create task' });
   }
 });
+
+module.exports = router;
 
 router.get('/user/:uid', async (req, res) => {
   try {
