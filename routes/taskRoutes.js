@@ -1,66 +1,71 @@
 const express = require('express');
 const multer = require('multer');
-const stream = require('stream');
-const Task = require('../models/taskModel'); // Your Task model
-const User = require('../models/userModel'); // Your User model
 const router = express.Router();
-const { cloudinary } = require('../utils/cloudinary'); // Your Cloudinary configuration
+const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2; // Make sure to configure Cloudinary
+const Task = require('../models/taskModel'); // Adjust the import path as per your structure
 
+// Set up multer for file handling
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// Cloudinary configuration (Assuming you've set up your environment variables)
+cloudinary.config({ 
+  cloud_name: process.env.CLOUD_NAME, 
+  api_key: process.env.API_KEY, 
+  api_secret: process.env.API_SECRET 
+});
+
 router.post('/', upload.single('image'), async (req, res) => {
-  try {
     let imageUrl = '';
     if (req.file) {
-      // Upload image to Cloudinary
-      const uploadResponse = await new Promise((resolve, reject) => {
-        const uploader = cloudinary.uploader.upload_stream(
-          { resource_type: 'auto' },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-        const bufferStream = new stream.PassThrough();
-        bufferStream.end(req.file.buffer);
-        bufferStream.pipe(uploader);
-      });
+        try {
+            // Upload image to Cloudinary
+            const result = await cloudinary.uploader.upload_stream({ resource_type: 'auto' }, (error, result) => {
+                if (error) throw error;
+                return result;
+            });
 
-      imageUrl = uploadResponse.url;
+            const bufferStream = new require('stream').PassThrough();
+            bufferStream.end(req.file.buffer);
+            bufferStream.pipe(result);
+            imageUrl = result.url;
+        } catch (error) {
+            return res.status(500).json({ message: 'Image upload failed', error: error.toString() });
+        }
     }
 
-    // Handle 'assignedTo' as an array of IDs
-    let assignedToArray = [];
+    let assignedTo = [];
     try {
-      assignedToArray = JSON.parse(req.body.assignedTo);
+        // Ensure assignedTo is parsed as an array of ObjectIds
+        assignedTo = JSON.parse(req.body.assignedTo).map(id => mongoose.Types.ObjectId(id));
     } catch (error) {
-      return res.status(400).json({ message: "Invalid format for assignedTo field" });
+        return res.status(400).json({ message: 'Invalid format for assignedTo field.', error: error.toString() });
     }
-
 
     const taskData = {
-      name: req.body.name,
-      description: req.body.description,
-      dueDate: new Date(req.body.dueDate),
-      job: req.body.job,
-      image: imageUrl,
-      assignedTo: assignedTo,
-      assignedBy: req.body.assignedBy, // Assuming this is provided and valid
-      supervisor: supervisorId,
+        name: req.body.name,
+        description: req.body.description,
+        dueDate: new Date(req.body.dueDate),
+        job: req.body.job,
+        image: imageUrl,
+        assignedTo: assignedTo,
+        assignedBy: mongoose.Types.ObjectId(req.body.assignedBy), // Ensure assignedBy is an ObjectId
+        supervisor: mongoose.Types.ObjectId(req.body.supervisor) // Ensure supervisor is an ObjectId
     };
 
-    const newTask = new Task(taskData);
-    await newTask.save();
-
-    res.status(201).json(newTask);
-  } catch (error) {
-    console.error('Error while creating task:', error);
-    res.status(500).json({ message: 'Failed to create task' });
-  }
+    try {
+        const newTask = new Task(taskData);
+        const savedTask = await newTask.save();
+        res.status(201).json(savedTask);
+    } catch (error) {
+        console.error('Error while creating task:', error);
+        res.status(500).json({ message: 'Failed to create task', error: error.toString() });
+    }
 });
 
 module.exports = router;
+
 
 router.get('/user/:uid', async (req, res) => {
   try {
