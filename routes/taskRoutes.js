@@ -35,10 +35,10 @@ router.post('/', upload.single('image'), async (req, res) => {
         }
     }
 
-    let assignedTo = [];
+    let assignedToIds = [];
     try {
         // Ensure assignedTo is parsed as an array of ObjectIds
-        assignedTo = JSON.parse(req.body.assignedTo).map(id => mongoose.Types.ObjectId(id));
+        assignedToIds = JSON.parse(req.body.assignedTo).map(id => mongoose.Types.ObjectId(id));
     } catch (error) {
         return res.status(400).json({ message: 'Invalid format for assignedTo field.', error: error.toString() });
     }
@@ -49,7 +49,7 @@ router.post('/', upload.single('image'), async (req, res) => {
         dueDate: new Date(req.body.dueDate),
         job: req.body.job,
         image: imageUrl,
-        assignedTo: assignedTo,
+        assignedTo: assignedToIds,
         assignedBy: mongoose.Types.ObjectId(req.body.assignedBy), // Ensure assignedBy is an ObjectId
         supervisor: mongoose.Types.ObjectId(req.body.supervisor) // Ensure supervisor is an ObjectId
     };
