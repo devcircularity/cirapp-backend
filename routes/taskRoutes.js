@@ -1,43 +1,31 @@
+const mongoose = require('mongoose');
 const express = require('express');
 const multer = require('multer');
-const router = express.Router();
-const mongoose = require('mongoose');
-const cloudinary = require('cloudinary').v2; // Make sure to configure Cloudinary
-const Task = require('../models/taskModel'); // Adjust the import path as per your structure
+const stream = require('stream');
+const { cloudinary } = require('../utils/cloudinary');
+const Task = require('../models/taskModel');
 
-// Set up multer for file handling
+const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
-// Cloudinary configuration (Assuming you've set up your environment variables)
-cloudinary.config({ 
-  cloud_name: process.env.CLOUD_NAME, 
-  api_key: process.env.API_KEY, 
-  api_secret: process.env.API_SECRET 
-});
 
 router.post('/', upload.single('image'), async (req, res) => {
     let imageUrl = '';
     if (req.file) {
-        try {
-            // Upload image to Cloudinary
-            const result = await cloudinary.uploader.upload_stream({ resource_type: 'auto' }, (error, result) => {
-                if (error) throw error;
-                return result;
-            });
+        // Upload image to Cloudinary and get the URL
+        const uploadResponse = await cloudinary.uploader.upload_stream({
+            resource_type: 'auto'
+        }, (error, result) => {
+            if (error) throw error;
+            return result;
+        });
 
-            const bufferStream = new require('stream').PassThrough();
-            bufferStream.end(req.file.buffer);
-            bufferStream.pipe(result);
-            imageUrl = result.url;
-        } catch (error) {
-            return res.status(500).json({ message: 'Image upload failed', error: error.toString() });
-        }
+        imageUrl = uploadResponse.url;
     }
 
     let assignedToIds = [];
     try {
-        // Ensure assignedTo is parsed as an array of ObjectIds
+        // Parse the 'assignedTo' field into an array of ObjectIds
         assignedToIds = JSON.parse(req.body.assignedTo).map(id => mongoose.Types.ObjectId(id));
     } catch (error) {
         return res.status(400).json({ message: 'Invalid format for assignedTo field.', error: error.toString() });
@@ -50,16 +38,16 @@ router.post('/', upload.single('image'), async (req, res) => {
         job: req.body.job,
         image: imageUrl,
         assignedTo: assignedToIds,
-        assignedBy: mongoose.Types.ObjectId(req.body.assignedBy), // Ensure assignedBy is an ObjectId
-        supervisor: mongoose.Types.ObjectId(req.body.supervisor) // Ensure supervisor is an ObjectId
+        assignedBy: mongoose.Types.ObjectId(req.body.assignedBy),
+        supervisor: mongoose.Types.ObjectId(req.body.supervisor),
     };
 
     try {
         const newTask = new Task(taskData);
-        const savedTask = await newTask.save();
-        res.status(201).json(savedTask);
+        await newTask.save();
+        res.status(201).json(newTask);
     } catch (error) {
-        console.error('Error while creating task:', error);
+        console.error('Error creating task:', error);
         res.status(500).json({ message: 'Failed to create task', error: error.toString() });
     }
 });
