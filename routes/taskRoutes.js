@@ -9,48 +9,77 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+const uploadImageToCloudinary = async (fileBuffer) => {
+  let attempts = 0;
+  const maxAttempts = 3; // Maximum number of attempts
+  while (attempts < maxAttempts) {
+      try {
+          const uploadResponse = await new Promise((resolve, reject) => {
+              const uploadStream = cloudinary.uploader.upload_stream({ resource_type: 'auto' }, (error, result) => {
+                  if (error) reject(error);
+                  else resolve(result);
+              });
+              stream.Readable.from(fileBuffer).pipe(uploadStream);
+          });
+          return uploadResponse.url; // Success
+      } catch (error) {
+          console.log(`Attempt ${attempts + 1} failed: ${error.message}`);
+          attempts += 1;
+          if (attempts >= maxAttempts) throw error; // Rethrow after max attempts
+      }
+  }
+};
+
 router.post('/', upload.single('image'), async (req, res) => {
-    let imageUrl = '';
-    if (req.file) {
-        // Upload image to Cloudinary and get the URL
-        const uploadResponse = await cloudinary.uploader.upload_stream({
-            resource_type: 'auto'
-        }, (error, result) => {
-            if (error) throw error;
-            return result;
-        });
+  let imageUrl = '';
+  if (req.file) {
+      try {
+          imageUrl = await uploadImageToCloudinary(req.file.buffer); // Use the retry logic function
+      } catch (error) {
+          return res.status(500).json({ message: 'Image upload failed', error: error.toString() });
+      }
+  }
 
-        imageUrl = uploadResponse.url;
-    }
+  // Parsing 'assignedTo' and converting to MongoDB ObjectIds
+  let assignedToIds = [];
+  try {
+      const assignedTo = JSON.parse(req.body.assignedTo);
+      assignedToIds = assignedTo.map(id => new mongoose.Types.ObjectId(id));
+  } catch (error) {
+      return res.status(400).json({ message: 'Invalid format for assignedTo field.', error: error.toString() });
+  }
 
-    let assignedToIds = [];
-    try {
-        // Parse the 'assignedTo' field into an array of ObjectIds
-        assignedToIds = JSON.parse(req.body.assignedTo).map(id => mongoose.Types.ObjectId(id));
-    } catch (error) {
-        return res.status(400).json({ message: 'Invalid format for assignedTo field.', error: error.toString() });
-    }
+  // Convert 'assignedBy' and 'supervisor' from string to ObjectId
+  let assignedById, supervisorId;
+  try {
+      if (req.body.assignedBy) assignedById = new mongoose.Types.ObjectId(req.body.assignedBy);
+      if (req.body.supervisor) supervisorId = new mongoose.Types.ObjectId(req.body.supervisor);
+  } catch (error) {
+      return res.status(400).json({ message: 'Invalid format for assignedBy or supervisor field.', error: error.toString() });
+  }
 
-    const taskData = {
-        name: req.body.name,
-        description: req.body.description,
-        dueDate: new Date(req.body.dueDate),
-        job: req.body.job,
-        image: imageUrl,
-        assignedTo: assignedToIds,
-        assignedBy: mongoose.Types.ObjectId(req.body.assignedBy),
-        supervisor: mongoose.Types.ObjectId(req.body.supervisor),
-    };
+  const taskData = {
+      name: req.body.name,
+      description: req.body.description,
+      dueDate: new Date(req.body.dueDate),
+      job: req.body.job, // Assuming this is already a valid ObjectId or that Mongoose will handle conversion
+      image: imageUrl,
+      assignedTo: assignedToIds,
+      assignedBy: assignedById, // Use converted ObjectId
+      supervisor: supervisorId, // Use converted ObjectId
+  };
 
-    try {
-        const newTask = new Task(taskData);
-        await newTask.save();
-        res.status(201).json(newTask);
-    } catch (error) {
-        console.error('Error creating task:', error);
-        res.status(500).json({ message: 'Failed to create task', error: error.toString() });
-    }
+  try {
+    console.log('Saving task with data:', taskData);
+      const newTask = new Task(taskData);
+      await newTask.save();
+      res.status(201).json(newTask);
+  } catch (error) {
+      console.error('Error creating task:', error);
+      res.status(500).json({ message: 'Failed to create task', error: error.toString() });
+  }
 });
+
 
 module.exports = router;
 
@@ -89,33 +118,24 @@ router.put('/update/:taskId', async (req, res) => {
 // ...
 
 // Route to get tasks assigned by a specific user
-// Route to get tasks assigned by a specific user
-// routes/taskRoutes.js
 router.get('/assignedBy/:uid', async (req, res) => {
+  console.log("Accessed /tasks/assignedBy/:userId route with userId:", req.params.userId);
+  const { userId } = req.params; // Extract the user ID from the request parameters
+  
   try {
-    const { uid } = req.params;
-//    console.log('Fetching tasks assigned that have by user ID:', uid);
-
-    const tasks = await Task.find({ assignedBy: uid })
-      .populate({
-        path: 'assignedBy',
-        select: 'uid fullName',
-      })
-      .populate({
-        path: 'assignedTo',
-        select: 'uid fullName',
-      })
-      .populate({
-        path: 'supervisor',
-        select: 'uid fullName',
-      });
-
-//    console.log('Fetched tasks:', tasks);
-
-    res.json(tasks);
+      const tasks = await Task.find({ assignedBy: userId }) // Query for tasks with the specified assignedBy value
+          .populate('assignedTo', 'name') // Optionally populate related documents, adjust fields as needed
+          .populate('assignedBy', 'name') // Populate the assignedBy field to get the assigner's information
+          .populate('supervisor', 'name'); // Adjust based on your schema
+      
+      if (tasks.length === 0) {
+          return res.status(404).json({ message: "No tasks found assigned by the specified user." });
+      }
+      
+      res.json(tasks); // Send the found tasks back in the response
   } catch (error) {
-    console.error('Error fetching tasks assigned by user:', error);
-    res.status(500).json({ message: "Internal Server Error" });
+      console.error('Error fetching tasks:', error);
+      res.status(500).json({ message: "Internal Server Error", error: error.toString() });
   }
 });
 

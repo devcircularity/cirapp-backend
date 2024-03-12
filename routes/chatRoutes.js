@@ -63,15 +63,35 @@ router.get('/:chatId/messages', async (req, res) => {
 
 
 // Get all chats for a user
+// Get all chats for a user and include the other user's details
 router.get('/user/:userId', async (req, res) => {
   try {
-    const { userId } = req.params;
-    const chats = await Chat.find({ members: userId }).populate('members', 'fullName avatar'); // Include the full name and avatar
-    res.json(chats);
+      const { userId } = req.params;
+      // Fetch chats where the user is a member
+      let chats = await Chat.find({ members: { $in: [userId] } })
+                            .populate('members', '_id fullName avatar');
+
+      // Transform the chats to include the other user's details
+      chats = chats.map(chat => {
+          const otherUser = chat.members.find(member => member._id.toString() !== userId.toString());
+          return {
+              ...chat.toObject(),
+              otherUser: otherUser ? {
+                  _id: otherUser._id,
+                  fullName: otherUser.fullName,
+                  avatar: otherUser.avatar
+              } : null // In case there's no other user or the chat is a group chat
+          };
+      });
+
+      res.json(chats);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+      console.error('Error fetching chats:', error);
+      res.status(500).json({ message: error.message });
   }
 });
+
+
 
 
 module.exports = router;

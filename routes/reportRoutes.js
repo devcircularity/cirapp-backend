@@ -10,18 +10,12 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const router = express.Router();
 
-router.post('/', upload.fields([
-  { name: 'clockInImage', maxCount: 1 },
-  { name: 'clockOutImage', maxCount: 1 }
-]), async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { createdBy, taskName, jobName, notes, taskStatus, taskItems, supervisor, lineManager } = req.body;
-
-    let clockInImageUrl = '';
-    let clockOutImageUrl = '';
+    const { createdBy, taskName, jobName, notes, taskStatus, taskItems, supervisor, lineManager, clockInImage, clockOutImage } = req.body;
 
     // Function to upload image to Cloudinary
-    const uploadImageToCloudinary = async (fileBuffer) => {
+    const uploadImageToCloudinary = async (base64Image) => {
       return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           { resource_type: 'auto' },
@@ -33,18 +27,24 @@ router.post('/', upload.fields([
             }
           }
         );
-        uploadStream.end(fileBuffer);
+
+        // Convert base64 string to buffer and upload
+        const buffer = Buffer.from(base64Image.split(",")[1], 'base64');
+        uploadStream.end(buffer);
       });
     };
 
-    // Handle clockInImage upload
-    if (req.files.clockInImage && req.files.clockInImage[0]) {
-      clockInImageUrl = await uploadImageToCloudinary(req.files.clockInImage[0].buffer);
+    let clockInImageUrl = '';
+    let clockOutImageUrl = '';
+
+    // Handle clockInImage upload if present
+    if (clockInImage) {
+      clockInImageUrl = await uploadImageToCloudinary(clockInImage);
     }
 
-    // Handle clockOutImage upload
-    if (req.files.clockOutImage && req.files.clockOutImage[0]) {
-      clockOutImageUrl = await uploadImageToCloudinary(req.files.clockOutImage[0].buffer);
+    // Handle clockOutImage upload if present
+    if (clockOutImage) {
+      clockOutImageUrl = await uploadImageToCloudinary(clockOutImage);
     }
 
     let taskIds = [];
@@ -119,7 +119,56 @@ router.get('/createdBy/:uid', async (req, res) => {
   }
 });
 
+router.get('/supervisor/:supervisorId', async (req, res) => {
+  try {
+    const { supervisorId } = req.params;
+    const supervisedUsers = await User.find({ supervisor: supervisorId });
+    const supervisedUserIds = supervisedUsers.map(user => user._id);
 
+    const reports = await Report.find({ createdBy: { $in: supervisedUserIds } })
+      .populate('createdBy', 'fullName') // Assuming you want to include some user details in the response
+      .populate('jobName', 'title')
+      .populate('supervisor', 'fullName');
+
+    res.json(reports);
+  } catch (error) {
+    console.error('Error fetching supervised user reports:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Add this route to fetch all reports
+router.get('/all', async (req, res) => {
+  try {
+    const reports = await Report.find({})
+      .populate('createdBy', 'fullName') // Populate the createdBy field if you store user's ID in createdBy
+      .populate('jobName', 'title') // Assuming jobName stores ObjectId referring to Job model
+      .populate('supervisor', 'fullName'); // Assuming supervisor stores ObjectId referring to User model
+    
+    res.json(reports);
+  } catch (error) {
+    console.error('Error fetching all reports:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// In your reports route file
+router.get('/details/:reportId', async (req, res) => {
+  try {
+    const report = await Report.findById(req.params.reportId)
+      .populate('jobName', 'title') // Populate other fields as necessary
+      .populate('createdBy', 'fullName'); // Assuming you've adjusted `createdBy` to store ObjectId references
+    
+    if (!report) {
+      return res.status(404).json({ message: 'Report not found' });
+    }
+    
+    res.json(report);
+  } catch (error) {
+    console.error('Failed to fetch report details:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 
 module.exports = router;

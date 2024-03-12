@@ -1,4 +1,3 @@
-// models/taskModel.js
 const mongoose = require('mongoose');
 
 const taskSchema = new mongoose.Schema({
@@ -16,43 +15,38 @@ const taskSchema = new mongoose.Schema({
     required: true,
   },
   job: {
-    type: String,
-    trim: true,
-    // If this is supposed to be a reference to another model, you might want to use a ref like below
-    // ref: 'Job'
+    type: mongoose.Schema.Types.ObjectId, // Corrected type for ObjectId reference
+    ref: 'Job', // Assuming 'Job' is the name of the model you're referencing
+    required: false, // Adjust based on your requirements
   },
-  assignedTo: {
-    type: mongoose.Schema.Types.ObjectId,  // Updated type to ObjectId
+  assignedTo: [{
+    type: mongoose.Schema.Types.ObjectId, // Defined as an array of ObjectId references
     ref: 'User',
-    required: false,
-    default: null,
-  },
+  }],
   assignedBy: {
-    type: String,
-    ref: 'User', // Reference to the User model
-    required: false,
+    type: mongoose.Schema.Types.ObjectId, // Corrected type for ObjectId reference
+    ref: 'User',
+    required: true, // Adjust based on your requirements
   },
   supervisor: {
-    type: mongoose.Schema.Types.ObjectId,  // Updated type to ObjectId
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: false,
+    required: false, // Adjust based on your requirements
     default: null,
   },
   image: {
     type: String,
     trim: true,
-    // You can set default to a placeholder image if you want
     default: '',
   },
   status: {
     type: String,
-    default: 'pending', // Default status
+    default: 'pending',
   },
   completed: {
     type: Boolean,
     default: false,
   },
-  // Add other new fields here as needed
 }, {
   timestamps: true,
 });
