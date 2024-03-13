@@ -2,6 +2,11 @@
 const express = require('express');
 const User = require('../models/userModel'); // Adjust with your user model
 const router = express.Router();
+const { cloudinary } = require('../utils/cloudinary');
+const multer = require('multer');
+const storage = multer.memoryStorage(); // Stores files in memory
+const upload = multer({ storage: storage });
+
 
 // Fetch all users based on the user's role
 // server/routes/userRoutes.js
@@ -27,6 +32,39 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
+// Example route to update a user's avatar
+// Apply Multer middleware to this route specifically for handling 'avatar' file uploads
+router.put('/:uid/avatar', upload.single('avatar'), async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const user = await User.findOne({ uid: uid });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!req.file) {
+      throw new Error('No file uploaded');
+    }
+
+    // Convert the uploaded file buffer to a Base64 string
+    const fileStr = `data:image/jpeg;base64,${req.file.buffer.toString('base64')}`;
+
+    // Upload file to Cloudinary
+    const result = await cloudinary.uploader.upload(fileStr);
+
+    // Update user document with new avatar URL
+    user.avatar = result.secure_url;
+    await user.save();
+
+    res.json(user);
+  } catch (error) {
+    console.error('Failed to update avatar:', error);
+    res.status(500).json({ message: 'Failed to update avatar' });
+  }
+});
+
 
 
 
