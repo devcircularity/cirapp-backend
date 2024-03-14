@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const http = require('http');
 const socketio = require('socket.io');
 
-
 // Import routes
 const taskRoutes = require('./routes/taskRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -31,20 +30,20 @@ const io = socketio(server, {
 });
 require('./configurations/socket')(io);
 
-
-
 // CORS configuration
 const whitelist = ['http://localhost:3000', 'https://vulgo-6d8e3.web.app'];
 const corsOptions = {
   origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
+    // Allow requests with no origin 
+    // (like mobile apps or curl requests)
+    if (!origin || whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
 // Use CORS options here
@@ -74,7 +73,7 @@ app.use(mapRoutes);
 app.use('/uploads', express.static('uploads'));
 
 // Handle preflight requests for all routes
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight request for CORS
 
 const port = process.env.PORT || 5000;
 server.listen(port, () => {
