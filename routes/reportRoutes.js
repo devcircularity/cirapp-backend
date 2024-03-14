@@ -12,7 +12,8 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
   try {
-    const { createdBy, taskName, jobName, notes, taskStatus, taskItems, supervisor, lineManager, clockInImage, clockOutImage } = req.body;
+    const { createdBy, taskName, jobName, notes, taskStatus, taskItems, supervisor, lineManager, clockInImage, clockOutImage, clockInTime, clockOutTime, clockInLocation, clockOutLocation
+    } = req.body;
 
     // Function to upload image to Cloudinary
     const uploadImageToCloudinary = async (base64Image) => {
@@ -91,7 +92,12 @@ const newReport = new Report({
   clockOutImage: clockOutImageUrl,
   taskItems: taskObjectIds,
   supervisor: supervisorUser ? supervisorUser._id : null, // Pass only the ObjectId
-  lineManager
+  lineManager,
+  clockInTime,
+            clockOutTime,
+            clockInLocation,
+            clockOutLocation,
+
 });
 
 

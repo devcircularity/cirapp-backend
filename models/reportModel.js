@@ -27,6 +27,20 @@ const reportSchema = new mongoose.Schema({
     required: false,
     default: null
   },
+
+  // In your reportModel definition
+clockInTime: { type: Date },
+clockOutTime: { type: Date },
+clockInLocation: {
+  lat: { type: Number },
+  lng: { type: Number }
+},
+clockOutLocation: {
+  lat: { type: Number },
+  lng: { type: Number }
+},
+
+
   lineManager: String,
   clockInImage: String,
   clockOutImage: String,

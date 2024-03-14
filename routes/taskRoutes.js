@@ -4,6 +4,7 @@ const multer = require('multer');
 const stream = require('stream');
 const { cloudinary } = require('../utils/cloudinary');
 const Task = require('../models/taskModel');
+const User = require('../models/userModel');
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -83,18 +84,33 @@ router.post('/', upload.single('image'), async (req, res) => {
 
 module.exports = router;
 
-
+// Assuming this route fetches tasks assigned to a specific user
 router.get('/user/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
-    // Query tasks where 'assignedTo' matches the 'uid' string
-    const tasks = await Task.find({ assignedTo: uid }).populate('assignedTo', 'uid name'); // Adjust the populate method according to your User model
+    // Find tasks where this user is either assignedTo, assignedBy, or is the supervisor
+    // Adjust based on your actual query requirement
+    const tasks = await Task.find({ 'assignedTo': uid })
+                            .populate({
+                              path: 'assignedTo',
+                              select: 'fullName -_id' // Exclude _id from the result
+                            })
+                            .populate({
+                              path: 'assignedBy',
+                              select: 'fullName -_id'
+                            })
+                            .populate({
+                              path: 'supervisor',
+                              select: 'fullName -_id'
+                            });
+
     res.json(tasks);
   } catch (error) {
     console.error('Error fetching tasks for user:', error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 // Example in an Express router file
 router.put('/update/:taskId', async (req, res) => {
@@ -106,6 +122,7 @@ router.put('/update/:taskId', async (req, res) => {
     const updateData = { completed };
     if (completed) updateData.status = 'pending';
 
+    // Find the task by ID and update its status
     await Task.findByIdAndUpdate(taskId, updateData, { new: true, upsert: true });
     res.status(200).send("Task status updated");
   } catch (error) {
@@ -139,8 +156,52 @@ router.get('/assignedBy/:uid', async (req, res) => {
   }
 });
 
+// For tasks supervised by a specific supervisor
+router.get('/supervisedBy/:supervisorId', async (req, res) => {
+  const { supervisorId } = req.params;
+  try {
+    const tasks = await Task.find({ supervisor: supervisorId })
+                             .populate('assignedTo', 'fullName');
+    res.json(tasks);
+  } catch (error) {
+    console.error('Error fetching tasks for supervisor:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// For tasks visible to a lineManager (excluding tasks of supervisors)
+router.get('/forLineManager', async (req, res) => {
+  try {
+    // Assuming 'User' model has a 'role' field
+    const supervisorIds = await User.find({ role: 'supervisor' }).select('_id');
+    const tasks = await Task.find({ assignedTo: { $nin: supervisorIds } })
+                             .populate('assignedTo', 'fullName');
+    res.json(tasks);
+  } catch (error) {
+    console.error('Error fetching tasks for lineManager:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
 
+// Add a route that fetches tasks from users with the role of supervisor
+router.get('/fromSupervisors', async (req, res) => {
+  try {
+    // First, find all users who are supervisors
+    const supervisors = await User.find({ role: 'supervisor' });
+    const supervisorIds = supervisors.map(supervisor => supervisor._id);
+
+    // Then, fetch tasks assigned to any of the supervisors
+    const tasks = await Task.find({ assignedTo: { $in: supervisorIds } })
+                            .populate('assignedTo', 'fullName') // Adjust according to your User model
+                            .populate('supervisor', 'fullName'); // Assuming tasks have a supervisor field
+
+    res.json(tasks);
+  } catch (error) {
+    console.error('Error fetching tasks from supervisors:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // ...
 
@@ -157,33 +218,24 @@ router.get('/count', async (req, res) => {
 
 
 
-router.get('/:taskId', async (req, res) => {
+router.get('/tasks/:taskId', async (req, res) => {
   try {
     const task = await Task.findById(req.params.taskId)
-      .populate('assignedTo', 'uid fullName')
-      .populate('assignedBy', 'uid fullName') // Populate assignedBy
-      .populate('supervisor', 'uid fullName') // Populate supervisor
-      .populate('job', 'title');
+      .populate('assignedTo', 'fullName')
+      .populate('assignedBy', 'fullName')
+      .populate('supervisor', 'fullName');
 
     if (!task) {
-      return res.status(404).json({ message: "Task not found" });
+      return res.status(404).send({ message: 'Task not found' });
     }
 
-//    console.log('Task details:', task);
-
-    // Convert task to a plain object to add additional fields
-    const taskDetails = task.toObject();
-    taskDetails.assignedToFullName = task.assignedTo ? task.assignedTo.fullName : 'N/A';
-    taskDetails.jobTitle = task.job ? task.job.title : 'N/A';
-
-//    console.log('Task details after modification:', taskDetails);
-
-    res.json(taskDetails);
+    res.json(task);
   } catch (error) {
-    console.error('Error fetching task details:', error);
-    res.status(500).json({ message: "Internal Server Error", error: error });
+    console.error('Error fetching task:', error);
+    res.status(500).send({ message: 'Failed to fetch task' });
   }
 });
+
 
 
 
