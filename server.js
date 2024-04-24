@@ -7,12 +7,15 @@ const socketio = require('socket.io');
 // Import routes
 const taskRoutes = require('./routes/taskRoutes');
 const userRoutes = require('./routes/userRoutes');
-const jobRoutes = require('./routes/jobRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const mapRoutes = require('./routes/mapRoutes');
-const chatRoutes = require('./routes/chatRoutes');
 const clientRoutes = require('./routes/clientRoutes');
+const detectionRoutes = require('./routes/detectionRoutes');
+const productRoutes = require('./routes/productsRoutes'); // Adjust the path as necessary
 const pendingTasksRoutes = require('./routes/pendingTaskRoutes');
+
+const collectorRoutes = require('./routes/collectorRoutes');
+
 
 // Import middleware
 const authenticate = require('./middleware/authenticate');
@@ -49,12 +52,15 @@ connection.once('open', () => {
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
-app.use('/api/jobs', jobRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/maps', mapRoutes); // Assuming mapRoutes expects '/api/maps'
-app.use('/api/chats', chatRoutes);
 app.use('/api/clients', clientRoutes);
+app.use('/api/detections', detectionRoutes);
 app.use('/api/pendingtasks', pendingTasksRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/collectors', collectorRoutes);
+
+
 
 // Static directory for uploads
 app.use('/uploads', express.static('uploads'));

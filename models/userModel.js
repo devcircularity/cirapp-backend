@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema({
     ref: 'User', // Assuming 'User' is the model name
     default: null
   },
+  points: {
+    totalPoints: { type: Number, required: true, default: 0 },
+    redeemablePoints: { type: Number, required: true, default: 0 }
+  },
 
 });
 

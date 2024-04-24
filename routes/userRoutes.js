@@ -119,11 +119,11 @@ router.get('/search', async (req, res) => {
       }
     });
 
-// New route to get a specific user by UID
+// Fetch a specific user by UID and include the points data
 router.get('/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
-    const user = await User.findOne({ uid: uid });
+    const user = await User.findOne({ uid: uid }).select("+points"); // Ensure points data is included
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -132,6 +132,21 @@ router.get('/:uid', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// Update user points
+router.get('/:uid/points', async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const user = await User.findOne({ uid: uid }).select("points");
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ points: user.points }); // Return the points data
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 
 router.put('/:userId', async (req, res) => {

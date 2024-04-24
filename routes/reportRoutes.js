@@ -3,7 +3,6 @@ const multer = require('multer');
 const { cloudinary } = require('../utils/cloudinary');
 const Report = require('../models/reportModel');
 const User = require('../models/userModel');
-const Job = require('../models/Job');
 const mongoose = require('mongoose');
 
 const storage = multer.memoryStorage();
